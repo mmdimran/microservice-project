@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+ name: enter-ingress
+ annotations:
+   nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+     paths:
+      - path: /ebanking
+        pathType: Prefix
+        backend:
+          service:
+            name: ebanking-service
+            port:
+              number: 80
+      - path: /helloworld
+        pathType: Prefix
+        backend:
+          service:
+            name: docker-hello-world-svc
+            port:
+              number: 8088
+      - path: /blue
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-deploy-blue-svc
+            port:
+              number: 80
+ 

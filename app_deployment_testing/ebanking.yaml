@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebank-nginx
+spec:
+  selector:
+    matchLabels:
+      run: ebank-nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: ebank-nginx
+    spec:
+      containers:
+      - name: ebank-nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebanking-service
+  labels:
+    run: ebank-nginx
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    run: ebank-nginx
+
