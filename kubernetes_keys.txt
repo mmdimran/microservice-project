@@ -1,0 +1,36 @@
+#!/bin/bash
+
+echo "Available namespace:"
+kubectl get ns
+
+echo ""
+
+echo -n "Enter user name:" ; read name
+echo -n "Enter namespace:" ; read ns
+
+cd /root/keystore
+openssl genrsa -out "$name".key 2048
+openssl req -new -key "$name".key -out "$name".csr -subj "/CN=$name/O=$ns"
+openssl x509 -req -in "$name".csr -CA ca.crt -CAkey ca.key -CAcreateserial -out "$name".crt -days 365
+
+kubectl --kubeconfig "$name".kubeconfig config set-cluster development --server https://192.168.1.10:6443 --certificate-authority ca.crt
+kubectl --kubeconfig "$name".kubeconfig config set-credentials "$name" --client-certificate /root/keystore/"$name".crt --client-key /root/keystore/"$name".key
+kubectl --kubeconfig "$name".kubeconfig config set-context "$name"-nonprod --cluster nonprod --namespace "$ns" --user "$name"
+
+echo "Make sure to update curent-context: "$name"-nonprod in file "$name".kubeconfig"
+
+echo "Available Roles for "$ns":"
+kubectl -n "$ns" get role
+kubectl -n "$ns" get rolebinding
+
+echo -n "Enter role name:" ; read rolename
+
+kubectl create role "$rolename"-"$ns"  --verb=get,list --resource=pods --namespace="$ns"
+kubectl -n "$ns" get role "$rolename"-"$ns" -o yaml
+
+kubectl create role-binding "$rolename"-"$ns"-rolebinding --role="$rolename" --user="$name" --namespace "$ns"
+kubectl -n finance get rolebinding "$rolename"-"$ns"-rolebinding -o yaml
+
+kubectl --kubeconfig john.kubeconfig get pods
+
+
